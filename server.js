@@ -78,7 +78,18 @@ async function sendHint(room) {
     return;
   }
   const fen = room.chess.fen();
-  const res = await analyse(fen, 700);
+  safeSend(p.ws, { type: 'assist', thinking: true });
+  let res;
+  try {
+    res = await Promise.race([
+      analyse(fen, 700),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('engine timeout')), 15000)),
+    ]);
+  } catch (e) {
+    console.error('hint failed', e.message);
+    if (seq === room.hintSeq) safeSend(p.ws, { type: 'assist', error: e.message });
+    return;
+  }
   if (seq !== room.hintSeq) return; // position changed meanwhile
   let san = null;
   try {

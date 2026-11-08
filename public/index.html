@@ -9,7 +9,7 @@
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, sans-serif; min-height:100vh; display:flex; justify-content:center; }
   .wrap { width:100%; max-width:520px; padding:14px; }
-  h1 { font-size:20px; margin:6px 0 14px; }
+  h1 { font-size:20px; margin:6px 0 14px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; cursor:pointer; }
   .card { background:var(--panel); border-radius:12px; padding:16px; }
   input, button { font:inherit; border-radius:8px; border:0; padding:12px; width:100%; }
   input { background:#16191c; color:var(--text); margin-bottom:10px; text-transform:none; }
@@ -33,7 +33,7 @@
   .coord { position:absolute; font-size:9px; opacity:.55; left:2px; top:1px; pointer-events:none; }
   /* secret assist: invisible unless toggled, and very subtle when shown */
   .sq.a-from::before, .sq.a-to::before { content:''; position:absolute; inset:0; box-shadow: inset 0 0 0 3px rgba(80,160,255,.55); pointer-events:none; }
-  #assist { display:none; font-size:12px; opacity:.55; padding:4px 6px; font-family:ui-monospace,monospace; }
+  #assist { display:none; min-height:18px; font-size:12px; opacity:.55; padding:4px 6px; font-family:ui-monospace,monospace; }
   .status { text-align:center; min-height:24px; margin:10px 0 4px; font-weight:600; }
   .moves { font-size:13px; opacity:.8; max-height:70px; overflow:auto; padding:4px; }
   .err { color:#f87171; min-height:18px; font-size:13px; }
@@ -203,7 +203,11 @@ function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&
 // until toggled: press H, or tap the title 3 times (phones).
 function renderAssist() {
   const el = $('assist');
-  if (!assist || !showAssist) { el.style.display = 'none'; return; }
+  if (!showAssist) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (!assist) { el.textContent = 'assistant on - waiting for your turn'; return; }
+  if (assist.thinking) { el.textContent = 'thinking...'; return; }
+  if (assist.error) { el.textContent = 'engine error: ' + assist.error; return; }
   let ev = assist.mate != null ? `#${assist.mate}` : (assist.cp != null ? (assist.cp/100).toFixed(2) : '?');
   el.style.display = 'block';
   el.textContent = `${assist.san || assist.best}  ${ev}  d${assist.depth}`;

@@ -19,6 +19,8 @@ child.stdout.on('data', (d) => {
   }
 });
 child.on('error', (e) => console.error('engine error', e));
+child.stderr.on('data', (d) => console.error('engine stderr', d.toString()));
+child.on('exit', (c) => console.error('engine exited', c));
 
 function send(cmd) { child.stdin.write(cmd + '\n'); }
 

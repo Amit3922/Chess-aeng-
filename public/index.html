@@ -79,7 +79,7 @@
 const GLYPH = { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
 for (const k in GLYPH) GLYPH[k] += '\uFE0E'; // force text glyphs (iOS renders ♟ as an emoji otherwise)
 const $ = (id) => document.getElementById(id);
-let ws, me = null, state = null, selected = null, assist = null, showAssist = false;
+let joinedCode = null, ws, me = null, state = null, selected = null, assist = null, showAssist = false;
 
 // pre-fill from URL / storage
 const params = new URLSearchParams(location.search);
@@ -87,15 +87,16 @@ $('name').value = localStorage.getItem('chessName') || '';
 if (params.get('room')) $('code').value = params.get('room').toUpperCase();
 
 function connect(code) {
+  if (ws && ws.readyState <= 1) { ws.onclose = null; try { ws.close(); } catch (e) {} }
   const name = $('name').value.trim() || 'Guest';
   localStorage.setItem('chessName', name);
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
   ws.onopen = () => ws.send(JSON.stringify({ type: 'join', name, code }));
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
-    if (m.type === 'error') { $('err').textContent = m.text; }
+    if (m.type === 'error') { $('err').textContent = m.text; if (m.text === 'Room not found') joinedCode = null; }
     else if (m.type === 'joined') {
-      me = m.color; $('lobby').style.display = 'none'; $('game').style.display = 'block';
+      joinedCode = m.code; me = m.color; $('lobby').style.display = 'none'; $('game').style.display = 'block';
       $('roomcode').textContent = m.code; history.replaceState(null, '', '?room=' + m.code);
     } else if (m.type === 'state') {
       if (state && state.fen !== m.fen) { assist = null; }
@@ -104,7 +105,7 @@ function connect(code) {
       assist = m; renderAssist(); renderBoard();
     }
   };
-  ws.onclose = () => { $('status').textContent = 'Disconnected — reload to rejoin'; };
+  ws.onclose = () => { if (joinedCode) { $('status').textContent = 'Reconnecting...'; setTimeout(() => connect(joinedCode), 1000); } };
 }
 $('create').onclick = () => connect('');
 $('join').onclick = () => { const c = $('code').value.trim(); if (c) connect(c); };
@@ -198,6 +199,7 @@ $('rematch').onclick = () => send({ type:'rematch' });
 $('share').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(location.href); $('share').textContent = 'copied!'; };
 function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+document.addEventListener('visibilitychange', () => { if (!document.hidden && joinedCode && (!ws || ws.readyState > 1)) connect(joinedCode); });
 // ---- secret assistant UI ----
 // The server only ever sends 'assist' to a player named Amit. Even then the overlay stays hidden
 // until toggled: press H, or tap the title 3 times (phones).

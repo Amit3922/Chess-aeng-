@@ -113,7 +113,13 @@ function leave(ws) {
   else broadcast(room);
 }
 
+// Heartbeat: drop dead connections (sleeping phones) so seats free up quickly.
+setInterval(() => {
+  for (const ws of wss.clients) { if (ws.isAlive === false) { ws.terminate(); continue; } ws.isAlive = false; try { ws.ping(); } catch (e) {} }
+}, 20000);
+
 wss.on('connection', (ws) => {
+  ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; });
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
@@ -127,7 +133,16 @@ wss.on('connection', (ws) => {
       ws.room = room;
       // Rejoin an existing seat by name, otherwise take a free seat, otherwise spectate.
       let color = null;
-      for (const c of ['w', 'b']) if (room.players[c] && room.players[c].name === name && room.players[c].ws.readyState !== 1) color = c;
+      // Same name = same person coming back (phone woke up / reloaded): take over their seat, drop the stale socket.
+      const same = (a) => a.trim().toLowerCase() === name.toLowerCase();
+      for (const c of ['w', 'b']) {
+        const pl = room.players[c];
+        if (pl && same(pl.name) && pl.ws !== ws) {
+          const old = pl.ws; old.room = null; try { old.terminate && old.terminate(); } catch (e) {}
+          color = c;
+        }
+      }
+      for (const sp of [...room.spectators]) if (same(sp.name) && sp.ws !== ws) { sp.ws.room = null; try { sp.ws.terminate(); } catch (e) {} room.spectators.delete(sp); }
       if (!color) for (const c of ['w', 'b']) if (!room.players[c]) { color = c; break; }
       const me = { ws, name, color };
       ws.me = me;

@@ -77,6 +77,7 @@
 
 <script>
 const GLYPH = { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
+for (const k in GLYPH) GLYPH[k] += '\uFE0E'; // force text glyphs (iOS renders ♟ as an emoji otherwise)
 const $ = (id) => document.getElementById(id);
 let ws, me = null, state = null, selected = null, assist = null, showAssist = false;
 

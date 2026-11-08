@@ -32,8 +32,9 @@
   .p-b { color:#111; }
   .coord { position:absolute; font-size:9px; opacity:.55; left:2px; top:1px; pointer-events:none; }
   /* secret assist: invisible unless toggled, and very subtle when shown */
-  .sq.a-from::before, .sq.a-to::before { content:''; position:absolute; inset:0; box-shadow: inset 0 0 0 3px rgba(80,160,255,.55); pointer-events:none; }
-  #assist { display:none; min-height:18px; font-size:12px; opacity:.55; padding:4px 6px; font-family:ui-monospace,monospace; }
+  .sq.a-from::before, .sq.a-to::before { content:''; position:absolute; inset:0; box-shadow: inset 0 0 0 4px rgba(60,140,255,.85); pointer-events:none; }
+  .sq.a-to::before { box-shadow: inset 0 0 0 4px rgba(255,90,90,.9); }
+  #assist { display:none; min-height:18px; font-size:12px; opacity:.8; padding:4px 6px; font-family:ui-monospace,monospace; }
   .status { text-align:center; min-height:24px; margin:10px 0 4px; font-weight:600; }
   .moves { font-size:13px; opacity:.8; max-height:70px; overflow:auto; padding:4px; }
   .err { color:#f87171; min-height:18px; font-size:13px; }
@@ -212,7 +213,18 @@ function renderAssist() {
   if (assist.error) { el.textContent = 'engine error: ' + assist.error; return; }
   let ev = assist.mate != null ? `#${assist.mate}` : (assist.cp != null ? (assist.cp/100).toFixed(2) : '?');
   el.style.display = 'block';
-  el.textContent = `${assist.san || assist.best}  ${ev}  d${assist.depth}`;
+  const NAMES = { k:'KING', q:'QUEEN', r:'ROOK', b:'BISHOP', n:'KNIGHT', p:'PAWN' };
+  const from = assist.best.slice(0,2), to = assist.best.slice(2,4), promo = assist.best[4];
+  let what = 'Move';
+  try {
+    const g = parseFen(state.fen);
+    const at = (sq) => g[8 - +sq[1]][files.indexOf(sq[0])];
+    const pc = at(from), tgt = at(to);
+    const name = NAMES[pc.toLowerCase()];
+    if (/^O-O/.test(assist.san || '')) what = (assist.san === 'O-O-O' ? 'CASTLE queenside: ' : 'CASTLE kingside: ') + 'move the KING ' + from + ' to ' + to;
+    else what = `Move the ${name} on ${from} to ${to}` + (tgt ? ` (captures ${NAMES[tgt.toLowerCase()]})` : '') + (promo ? ` and promote to ${NAMES[promo]}` : '');
+  } catch (e) { what = `Move ${from} to ${to}`; }
+  el.innerHTML = `<div style="font-size:15px;opacity:1;font-weight:600">${what}</div><div>${assist.san || ''}  eval ${ev}  depth ${assist.depth}</div>`;
 }
 function toggleAssist() { showAssist = !showAssist; renderAssist(); renderBoard(); }
 document.addEventListener('keydown', (e) => { if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT') toggleAssist(); });

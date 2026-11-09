@@ -319,6 +319,20 @@ function renderBoard() {
 
 function clickSquare(name, piece) {
   if (!state || state.status.over || state.turn !== me) return;
+  if (selected && piece) {
+    // Castling shortcut: tap king then own rook (or rook then king).
+    const g = parseFen(state.fen), at = (sq) => g[8 - +sq[1]][files.indexOf(sq[0])];
+    const a = at(selected), isMine = (p) => (me === 'w') === (p === p.toUpperCase());
+    if (a && isMine(a) && isMine(piece) && selected[1] === name[1]) {
+      let kSq = null, rSq = null;
+      if (a.toLowerCase() === 'k' && piece.toLowerCase() === 'r') { kSq = selected; rSq = name; }
+      else if (a.toLowerCase() === 'r' && piece.toLowerCase() === 'k') { kSq = name; rSq = selected; }
+      if (kSq) {
+        const dest = (rSq[0] > kSq[0] ? 'g' : 'c') + kSq[1];
+        if (state.legal.some((m) => m.from === kSq && m.to === dest)) return send({ type: 'move', from: kSq, to: dest });
+      }
+    }
+  }
   if (selected) {
     const cands = state.legal.filter((m) => m.from === selected && m.to === name);
     if (cands.length) {

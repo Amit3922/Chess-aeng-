@@ -138,11 +138,11 @@ wss.on('connection', (ws) => {
       for (const c of ['w', 'b']) {
         const pl = room.players[c];
         if (pl && same(pl.name) && pl.ws !== ws) {
-          const old = pl.ws; old.room = null; try { old.terminate && old.terminate(); } catch (e) {}
+          const old = pl.ws; old.room = null; try { old.close && old.close(4000, 'replaced'); } catch (e) {}
           color = c;
         }
       }
-      for (const sp of [...room.spectators]) if (same(sp.name) && sp.ws !== ws) { sp.ws.room = null; try { sp.ws.terminate(); } catch (e) {} room.spectators.delete(sp); }
+      for (const sp of [...room.spectators]) if (same(sp.name) && sp.ws !== ws) { sp.ws.room = null; try { sp.ws.close(4000, 'replaced'); } catch (e) {} room.spectators.delete(sp); }
       if (!color) for (const c of ['w', 'b']) if (!room.players[c]) { color = c; break; }
       const me = { ws, name, color };
       ws.me = me;

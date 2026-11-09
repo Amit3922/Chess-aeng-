@@ -2,87 +2,165 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#262421">
 <title>Chess Rooms</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="pieces.css">
 <style>
-  :root { --light:#eeeed2; --dark:#6b8f4e; --bg:#1f2326; --panel:#2b3035; --text:#e8e8e8; --accent:#f0b429; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, sans-serif; min-height:100vh; display:flex; justify-content:center; }
-  .wrap { width:100%; max-width:520px; padding:14px; }
-  h1 { font-size:20px; margin:6px 0 14px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; cursor:pointer; }
-  .card { background:var(--panel); border-radius:12px; padding:16px; }
-  input, button { font:inherit; border-radius:8px; border:0; padding:12px; width:100%; }
-  input { background:#16191c; color:var(--text); margin-bottom:10px; text-transform:none; }
-  button { background:var(--accent); color:#222; font-weight:600; cursor:pointer; margin-bottom:8px; }
-  button.sec { background:#444b52; color:var(--text); }
-  .row { display:flex; gap:8px; } .row > * { flex:1; }
-  #game { display:none; }
-  .bar { display:flex; justify-content:space-between; align-items:center; padding:6px 4px; font-size:15px; }
-  .bar .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; background:#777; }
-  .bar .turn .dot { background:#4ade80; }
-  #board { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; border-radius:6px; overflow:hidden; user-select:none; touch-action:manipulation; }
-  .sq { position:relative; display:flex; align-items:center; justify-content:center; font-size:min(9vw,46px); line-height:1; cursor:pointer; }
-  .sq.l { background:var(--light); color:#000; } .sq.d { background:var(--dark); color:#000; }
-  .sq.sel { box-shadow: inset 0 0 0 4px #facc15; }
-  .sq.last { background-image: linear-gradient(rgba(255,235,59,.45),rgba(255,235,59,.45)); }
-  .sq.target::after { content:''; position:absolute; width:28%; height:28%; border-radius:50%; background:rgba(0,0,0,.28); }
-  .sq.cap::after { width:86%; height:86%; background:none; border:4px solid rgba(0,0,0,.28); }
-  .sq.chk { background-image: radial-gradient(circle, rgba(220,38,38,.9), rgba(220,38,38,0) 70%); }
-  .p-w { color:#fff; text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 3px #000; }
-  .p-b { color:#111; }
-  .coord { position:absolute; font-size:9px; opacity:.55; left:2px; top:1px; pointer-events:none; }
-  /* secret assist: invisible unless toggled, and very subtle when shown */
-  .sq.a-from::before, .sq.a-to::before { content:''; position:absolute; inset:0; box-shadow: inset 0 0 0 4px rgba(60,140,255,.85); pointer-events:none; }
-  .sq.a-to::before { box-shadow: inset 0 0 0 4px rgba(255,90,90,.9); }
-  #assist { display:none; min-height:18px; font-size:12px; opacity:.8; padding:4px 6px; font-family:ui-monospace,monospace; }
-  .status { text-align:center; min-height:24px; margin:10px 0 4px; font-weight:600; }
-  .moves { font-size:13px; opacity:.8; max-height:70px; overflow:auto; padding:4px; }
-  .err { color:#f87171; min-height:18px; font-size:13px; }
-  .small { font-size:13px; opacity:.75; }
-  dialog { border:0; border-radius:12px; background:var(--panel); color:var(--text); }
-  dialog button { width:64px; font-size:34px; padding:6px; background:#444b52; margin:4px; }
+  :root {
+    --bg:#302e2b; --panel:#262421; --panel2:#2b2926; --btn:#3d3a37; --text:#ffffff; --muted:#a7a6a2;
+    --green:#81b64c; --green-d:#45753c; --light:#ebecd0; --dark:#739552;
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { min-height:100vh; }
+
+  /* header */
+  header { display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--panel); font-weight:800; font-size:20px; letter-spacing:-.2px;
+           user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; cursor:pointer; }
+  header .logo { color:var(--green); font-size:26px; line-height:1; }
+
+  button { font:inherit; border:0; border-radius:8px; color:var(--text); background:var(--btn); padding:12px 14px; font-weight:700; cursor:pointer; touch-action:manipulation; }
+  button.green { background:var(--green); box-shadow:0 4px 0 var(--green-d); font-size:20px; padding:16px; width:100%; }
+  button.green:active { transform:translateY(3px); box-shadow:0 1px 0 var(--green-d); }
+  button.big { width:100%; }
+  input { font:inherit; width:100%; padding:14px; border-radius:8px; border:2px solid #4a4743; background:#1f1e1c; color:var(--text); outline:none; }
+  input:focus { border-color:var(--green); }
+
+  /* lobby */
+  #lobby { max-width:420px; margin:28px auto; padding:0 16px; }
+  .lcard { background:var(--panel); border-radius:12px; padding:22px; }
+  .lcard h2 { margin:0 0 4px; font-size:24px; }
+  .lcard p { margin:0 0 18px; color:var(--muted); }
+  .or { display:flex; align-items:center; gap:10px; color:var(--muted); margin:18px 0; font-size:13px; }
+  .or::before, .or::after { content:''; flex:1; height:1px; background:#44413d; }
+  .jrow { display:flex; gap:8px; } .jrow input { text-transform:uppercase; letter-spacing:3px; text-align:center; font-weight:700; }
+  .jrow button { width:110px; }
+  .err { color:#ff7b72; min-height:20px; margin-top:10px; font-size:14px; }
+  .field { margin-bottom:14px; }
+
+  /* game layout */
+  #game { display:none; max-width:1000px; margin:0 auto; padding:10px 8px 24px; }
+  .layout { display:flex; gap:20px; justify-content:center; align-items:flex-start; }
+  .left { width:100%; max-width:640px; }
+  @media (min-width: 900px) { .left { max-width:min(640px, calc(100vh - 190px)); } }
+  .right { width:340px; display:none; }
+  .below { margin-top:10px; }
+  @media (min-width: 900px) { .right { display:block; } .below { display:none; } #game { padding-top:20px; } }
+
+  .player { display:flex; align-items:center; gap:10px; padding:6px 2px; min-height:48px; }
+  .avatar { width:36px; height:36px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:#fff; flex:none; text-shadow:0 1px 2px rgba(0,0,0,.4); }
+  .pinfo { flex:1; min-width:0; }
+  .pname { font-weight:700; font-size:15px; display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pname .tag { font-size:11px; font-weight:700; background:var(--btn); color:var(--muted); border-radius:3px; padding:1px 5px; }
+  .pname .online { width:8px; height:8px; border-radius:50%; background:#555; flex:none; }
+  .pname .online.on { background:var(--green); }
+  .captured { height:20px; display:flex; align-items:center; color:var(--muted); font-size:12px; font-weight:700; }
+  .captured piece { display:inline-block; width:20px; height:20px; background-size:cover; margin-right:-9px; }
+  .captured .gap { margin-left:12px; }
+  .turnpill { font-size:12px; font-weight:800; padding:6px 10px; border-radius:4px; background:var(--btn); color:var(--muted); }
+  .turnpill.active { background:#fff; color:#262421; }
+
+  /* board */
+  .boardwrap { position:relative; border-radius:4px; overflow:hidden; box-shadow:0 2px 14px rgba(0,0,0,.4); }
+  #board { display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+  .sq { position:relative; cursor:pointer; }
+  .sq.l { background-color:var(--light); } .sq.d { background-color:var(--dark); }
+  .sq.l.hl { background-color:#f5f682; } .sq.d.hl { background-color:#b9ca43; }
+  .sq.chk { background-image:radial-gradient(ellipse at center, rgba(255,0,0,1) 0%, rgba(231,0,0,1) 25%, rgba(169,0,0,0) 89%, rgba(158,0,0,0) 100%); }
+  .sq piece { position:absolute; inset:0; display:block; background-size:cover; z-index:1; }
+  .sq .co { position:absolute; font-size:clamp(9px,2.4vw,13px); font-weight:800; line-height:1; pointer-events:none; z-index:2; }
+  .sq .co.r { top:3px; left:3px; } .sq .co.f { bottom:2px; right:3px; }
+  .sq.l .co { color:var(--dark); } .sq.d .co { color:var(--light); }
+  .sq.target::after { content:''; position:absolute; left:34%; top:34%; width:32%; height:32%; border-radius:50%; background:rgba(0,0,0,.2); z-index:3; pointer-events:none; }
+  .sq.cap::after { content:''; position:absolute; inset:0; border-radius:50%; border:clamp(4px,1.2vw,7px) solid rgba(0,0,0,.2); z-index:3; pointer-events:none; }
+  .sq.sel.hov { }
+  /* secret assistant squares (only ever drawn for the player named Amit when toggled) */
+  .sq.a-from::before { content:''; position:absolute; inset:0; box-shadow:inset 0 0 0 4px rgba(60,140,255,.9); z-index:4; pointer-events:none; }
+  .sq.a-to::before { content:''; position:absolute; inset:0; box-shadow:inset 0 0 0 4px rgba(255,90,90,.95); z-index:4; pointer-events:none; }
+  #assist { display:none; margin-top:8px; padding:8px 10px; border-radius:8px; background:var(--panel2); color:#9ecbff; font-size:13px; font-family:ui-monospace, Menlo, monospace; opacity:.85; }
+
+  /* side panel */
+  .panel { background:var(--panel); border-radius:10px; overflow:hidden; }
+  .pstatus { padding:14px 16px; background:var(--panel2); font-weight:700; font-size:15px; min-height:52px; display:flex; align-items:center; gap:8px; }
+  .pstatus .dot { width:10px; height:10px; border-radius:50%; background:var(--green); flex:none; }
+  .movelist { max-height:230px; overflow:auto; padding:6px 0; font-size:15px; font-weight:600; }
+  .movelist .mv { display:grid; grid-template-columns:44px 1fr 1fr; padding:4px 12px; }
+  .movelist .mv:nth-child(odd) { background:rgba(255,255,255,.03); }
+  .movelist .n { color:var(--muted); }
+  .movelist .m { padding:1px 6px; border-radius:4px; width:fit-content; }
+  .movelist .m.cur { background:#4a4743; }
+  .movelist .empty { color:var(--muted); padding:12px 16px; font-weight:500; }
+  .controls { display:flex; gap:8px; padding:12px; }
+  .controls button { flex:1; }
+  .share { padding:0 12px 14px; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .share b { color:var(--text); letter-spacing:2px; font-size:15px; }
+  .share button { padding:8px 12px; font-size:13px; }
+  .spec { padding:0 16px 12px; font-size:13px; color:var(--muted); }
+
+  /* game over / promotion */
+  #overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:20; padding:20px; }
+  .ocard { background:var(--panel); border-radius:14px; width:100%; max-width:340px; overflow:hidden; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+  .ocard .ohead { background:var(--panel2); padding:22px 16px 18px; }
+  .ocard .otitle { font-size:26px; font-weight:800; }
+  .ocard .osub { color:var(--muted); margin-top:4px; font-size:15px; }
+  .ocard .obody { padding:16px; display:flex; flex-direction:column; gap:10px; }
+  #promo { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:30; }
+  #promo .pbox { background:#fff; border-radius:8px; display:flex; padding:6px; gap:2px; }
+  #promo .pbtn { width:68px; height:68px; background-color:#f0f0f0; border-radius:6px; padding:0; position:relative; }
+  #promo .pbtn piece { position:absolute; inset:0; background-size:cover; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1 id="title">♞ Chess Rooms</h1>
+<header id="title"><span class="logo">♞</span> Chess Rooms</header>
 
-  <div id="lobby" class="card">
-    <input id="name" placeholder="Your name" maxlength="20" autocomplete="off">
-    <button id="create">Create a room</button>
-    <div class="small" style="margin:6px 0">or join with a code</div>
-    <div class="row">
-      <input id="code" placeholder="ROOM CODE" maxlength="5" autocapitalize="characters" style="text-transform:uppercase">
-      <button id="join" class="sec">Join</button>
+<div id="lobby">
+  <div class="lcard">
+    <h2>Play chess</h2>
+    <p>Play a friend in a private room.</p>
+    <div class="field"><input id="name" placeholder="Your name" maxlength="20" autocomplete="off"></div>
+    <button class="green" id="create">Play a friend</button>
+    <div class="or">or join a room</div>
+    <div class="jrow">
+      <input id="code" placeholder="CODE" maxlength="5" autocapitalize="characters" autocomplete="off">
+      <button id="join">Join</button>
     </div>
     <div class="err" id="err"></div>
   </div>
+</div>
 
-  <div id="game">
-    <div class="bar" id="topbar"></div>
-    <div id="board"></div>
-    <div class="bar" id="botbar"></div>
-    <div id="assist"></div>
-    <div class="status" id="status"></div>
-    <div class="moves" id="moves"></div>
-    <div class="row" style="margin-top:8px">
-      <button class="sec" id="draw">Offer draw</button>
-      <button class="sec" id="resign">Resign</button>
+<div id="game">
+  <div class="layout">
+    <div class="left">
+      <div class="player" id="topbar"></div>
+      <div class="boardwrap cg-wrap"><div id="board"></div></div>
+      <div class="player" id="botbar"></div>
+      <div id="assist"></div>
+      <div class="below panel" id="belowpanel"></div>
     </div>
-    <button id="rematch" style="display:none">Rematch (swap colors)</button>
-    <div class="small" style="text-align:center;margin-top:6px">Room <b id="roomcode"></b> — <span id="share" style="text-decoration:underline;cursor:pointer">copy invite link</span></div>
+    <div class="right panel" id="rightpanel"></div>
   </div>
 </div>
 
-<dialog id="promo"><div id="promoBtns"></div></dialog>
+<div id="overlay"><div class="ocard">
+  <div class="ohead"><div class="otitle" id="otitle"></div><div class="osub" id="osub"></div></div>
+  <div class="obody">
+    <button class="green" id="orematch" style="font-size:17px;padding:13px">Rematch</button>
+    <button id="oclose">Close</button>
+  </div>
+</div></div>
+
+<div id="promo"><div class="pbox" id="promoBtns"></div></div>
 
 <script>
-const GLYPH = { k:'♚', q:'♛', r:'♜', b:'♝', n:'♞', p:'♟' };
-for (const k in GLYPH) GLYPH[k] += '\uFE0E'; // force text glyphs (iOS renders ♟ as an emoji otherwise)
+const KIND = { k:'king', q:'queen', r:'rook', b:'bishop', n:'knight', p:'pawn' };
+const NAMES = { k:'KING', q:'QUEEN', r:'ROOK', b:'BISHOP', n:'KNIGHT', p:'PAWN' };
+const VAL = { p:1, n:3, b:3, r:5, q:9 };
+const files = 'abcdefgh';
 const $ = (id) => document.getElementById(id);
-let joinedCode = null, ws, me = null, state = null, selected = null, assist = null, showAssist = false;
+let joinedCode = null, ws, me = null, state = null, selected = null, assist = null, showAssist = false, dismissed = '';
 
-// pre-fill from URL / storage
 const params = new URLSearchParams(location.search);
 $('name').value = localStorage.getItem('chessName') || '';
 if (params.get('room')) $('code').value = params.get('room').toUpperCase();
@@ -98,49 +176,114 @@ function connect(code) {
     if (m.type === 'error') { $('err').textContent = m.text; if (m.text === 'Room not found') joinedCode = null; }
     else if (m.type === 'joined') {
       joinedCode = m.code; me = m.color; $('lobby').style.display = 'none'; $('game').style.display = 'block';
-      $('roomcode').textContent = m.code; history.replaceState(null, '', '?room=' + m.code);
+      history.replaceState(null, '', '?room=' + m.code);
     } else if (m.type === 'state') {
-      if (state && state.fen !== m.fen) { assist = null; }
-      state = m; me = m.you; selected = null; render();
-    } else if (m.type === 'assist') {
-      assist = m; renderAssist(); renderBoard();
-    }
+      const prevLen = state ? state.history.length : 0;
+      if (state && state.fen !== m.fen) assist = null;
+      state = m; me = m.you; selected = null;
+      if (m.history.length > prevLen && prevLen >= 0 && state) sound(m.history[m.history.length - 1]);
+      render();
+    } else if (m.type === 'assist') { assist = m; renderAssist(); renderBoard(); }
   };
-  ws.onclose = () => { if (joinedCode) { $('status').textContent = 'Reconnecting...'; setTimeout(() => connect(joinedCode), 1000); } };
+  ws.onclose = (ev) => {
+    if (ev && ev.code === 4000) { joinedCode = null; setStatusText('This room was opened in another tab or device. Reload to use it here.'); return; }
+    if (joinedCode) { setStatusText('Reconnecting...'); setTimeout(() => connect(joinedCode), 1000); }
+  };
 }
 $('create').onclick = () => connect('');
-$('join').onclick = () => { const c = $('code').value.trim(); if (c) connect(c); };
+$('join').onclick = () => { const c = $('code').value.trim(); if (c) connect(c); else $('err').textContent = 'Enter a room code'; };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && joinedCode && (!ws || ws.readyState > 1)) connect(joinedCode); });
 
 function parseFen(fen) {
-  const rows = fen.split(' ')[0].split('/');
-  return rows.map((r) => { const out = []; for (const ch of r) { if (/\d/.test(ch)) for (let i=0;i<+ch;i++) out.push(null); else out.push(ch); } return out; });
+  return fen.split(' ')[0].split('/').map((r) => { const out = []; for (const ch of r) { if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) out.push(null); else out.push(ch); } return out; });
 }
-const files = 'abcdefgh';
 const sqName = (r, c) => files[c] + (8 - r);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const pieceEl = (ch) => `<piece class="${KIND[ch.toLowerCase()]} ${ch === ch.toUpperCase() ? 'white' : 'black'}"></piece>`;
+
+function avatarColor(name) { let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 45% 42%)`; }
+
+// ---------- sounds ----------
+let actx;
+function sound(san) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    const cap = san && san.includes('x');
+    o.type = 'triangle'; o.frequency.value = cap ? 220 : 330;
+    g.gain.setValueAtTime(.18, actx.currentTime); g.gain.exponentialRampToValueAtTime(.001, actx.currentTime + (cap ? .16 : .1));
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + .18);
+  } catch (e) {}
+}
+
+// ---------- rendering ----------
+function captured(grid) {
+  const start = { p:8, n:2, b:2, r:2, q:1 };
+  const have = { w:{ p:0,n:0,b:0,r:0,q:0 }, b:{ p:0,n:0,b:0,r:0,q:0 } };
+  for (const row of grid) for (const ch of row) if (ch && ch.toLowerCase() !== 'k') have[ch === ch.toUpperCase() ? 'w' : 'b'][ch.toLowerCase()]++;
+  const out = { w:[], b:[] }; // out.w = black pieces captured by white
+  let mat = 0;
+  for (const k of ['q','r','b','n','p']) {
+    for (let i = 0; i < Math.max(0, start[k] - have.b[k]); i++) out.w.push(k);
+    for (let i = 0; i < Math.max(0, start[k] - have.w[k]); i++) out.b.push(k);
+    mat += (have.w[k] - have.b[k]) * VAL[k];
+  }
+  return { out, mat };
+}
+
+function playerBar(c, grid) {
+  const name = state.players[c];
+  const { out, mat } = captured(grid);
+  const mine = out[c]; // pieces this side has captured
+  const adv = c === 'w' ? mat : -mat;
+  const capHtml = mine.map((k) => `<piece class="${KIND[k]} ${c === 'w' ? 'black' : 'white'}"></piece>`).join('') + (adv > 0 ? `<span class="gap">+${adv}</span>` : '');
+  const active = state.turn === c && !state.status.over && state.players.w && state.players.b;
+  const label = name ? esc(name) : 'Waiting for opponent…';
+  const you = c === me ? '<span class="tag">YOU</span>' : '';
+  return `<div class="avatar" style="background:${name ? avatarColor(name) : '#555'}">${name ? esc(name[0].toUpperCase()) : '?'}</div>
+    <div class="pinfo"><div class="pname">${label} ${you}</div><div class="captured">${capHtml}</div></div>
+    <div class="turnpill ${active ? 'active' : ''}">${c === 'w' ? 'White' : 'Black'}${active ? ' • to move' : ''}</div>`;
+}
+
+function statusLine() {
+  const s = state;
+  if (s.status.over) return s.status.text;
+  if (!s.players.w || !s.players.b) return 'Waiting for your opponent… send them the invite link';
+  if (s.drawOffer) return s.drawOffer === me ? 'Draw offer sent' : 'Your opponent offers a draw';
+  const base = (me === 'w' || me === 'b') ? (s.turn === me ? 'Your move' : "Opponent's move") : (s.turn === 'w' ? 'White to move' : 'Black to move');
+  return s.status.text ? `${base} — ${s.status.text}` : base;
+}
+function setStatusText(t) { document.querySelectorAll('.pstatus .stxt').forEach((e) => e.textContent = t); }
+
+function panelHtml() {
+  const over = state.status.over, isPlayer = me === 'w' || me === 'b';
+  const h = state.history; let rows = '';
+  for (let i = 0; i < h.length; i += 2) {
+    const n = i / 2 + 1, last = h.length - 1;
+    rows += `<div class="mv"><span class="n">${n}.</span><span class="m ${i === last ? 'cur' : ''}">${esc(h[i])}</span><span class="m ${i + 1 === last ? 'cur' : ''}">${esc(h[i + 1] || '')}</span></div>`;
+  }
+  if (!rows) rows = '<div class="empty">No moves yet. White starts.</div>';
+  const drawLbl = state.drawOffer && state.drawOffer !== me ? 'Accept draw' : '½ Draw';
+  const controls = isPlayer
+    ? (over ? `<div class="controls"><button class="big green" style="font-size:16px;padding:13px" data-act="rematch">Rematch</button></div>`
+            : `<div class="controls"><button data-act="draw">${drawLbl}</button><button data-act="resign">🏳 Resign</button></div>`)
+    : '';
+  const spec = state.spectators ? `<div class="spec">👁 ${state.spectators} watching</div>` : '';
+  return `<div class="pstatus"><span class="dot"></span><span class="stxt">${esc(statusLine())}</span></div>
+    <div class="movelist">${rows}</div>${controls}${spec}
+    <div class="share"><span>Room <b>${state.code}</b></span><button data-act="share">Copy invite link</button></div>`;
+}
 
 function render() {
-  renderBoard();
-  const flipped = me === 'b';
-  const top = flipped ? 'w' : 'b', bot = flipped ? 'b' : 'w';
-  const bar = (c) => {
-    const n = state.players[c] || 'waiting…';
-    const active = state.turn === c && !state.status.over;
-    return `<span class="${active ? 'turn' : ''}"><span class="dot"></span>${c === 'w' ? '⚪' : '⚫'} ${escapeHtml(n)}</span>` +
-           (c === top && state.spectators ? `<span class="small">👁 ${state.spectators}</span>` : '');
-  };
-  $('topbar').innerHTML = bar(top); $('botbar').innerHTML = bar(bot);
-  let s = state.status.text;
-  if (!s && !state.players.w || !state.players.b) s = s || 'Waiting for opponent… share the room code';
-  if (state.drawOffer && !state.status.over) s = state.drawOffer === me ? 'Draw offered' : 'Opponent offers a draw';
-  $('status').textContent = s;
-  const mv = state.history; let txt = '';
-  for (let i = 0; i < mv.length; i += 2) txt += `${i/2+1}. ${mv[i]} ${mv[i+1] || ''}  `;
-  $('moves').textContent = txt; $('moves').scrollTop = 1e6;
-  const over = state.status.over, isPlayer = me === 'w' || me === 'b';
-  $('rematch').style.display = over && isPlayer ? 'block' : 'none';
-  $('draw').style.display = $('resign').style.display = (!over && isPlayer) ? '' : 'none';
-  $('draw').textContent = state.drawOffer && state.drawOffer !== me ? 'Accept draw' : 'Offer draw';
-  renderAssist();
+  const grid = parseFen(state.fen);
+  const flipped = me === 'b', top = flipped ? 'w' : 'b', bot = flipped ? 'b' : 'w';
+  $('topbar').innerHTML = playerBar(top, grid);
+  $('botbar').innerHTML = playerBar(bot, grid);
+  const html = panelHtml();
+  $('rightpanel').innerHTML = html; $('belowpanel').innerHTML = html;
+  for (const el of document.querySelectorAll('[data-act]')) el.onclick = () => act(el.dataset.act);
+  const mv = document.querySelectorAll('.movelist'); mv.forEach((e) => e.scrollTop = 1e6);
+  renderBoard(); renderAssist(); renderOverlay();
 }
 
 function renderBoard() {
@@ -149,27 +292,26 @@ function renderBoard() {
   const board = $('board'); board.innerHTML = '';
   const legalFrom = selected ? state.legal.filter((m) => m.from === selected) : [];
   let kingSq = null;
-  if (state.status.text === 'Check!' || state.status.text.startsWith('Checkmate')) {
-    for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (grid[r][c] === (state.turn === 'w' ? 'K' : 'k')) kingSq = sqName(r,c);
+  if (state.status.text.startsWith('Check') || state.status.text.startsWith('Checkmate')) {
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (grid[r][c] === (state.turn === 'w' ? 'K' : 'k')) kingSq = sqName(r, c);
   }
   for (let i = 0; i < 64; i++) {
-    const r = flipped ? 7 - Math.floor(i/8) : Math.floor(i/8), c = flipped ? 7 - (i%8) : i%8;
+    const r = flipped ? 7 - Math.floor(i / 8) : Math.floor(i / 8), c = flipped ? 7 - (i % 8) : i % 8;
     const name = sqName(r, c), piece = grid[r][c];
     const el = document.createElement('div');
     el.className = 'sq ' + ((r + c) % 2 ? 'd' : 'l');
-    if (name === selected) el.classList.add('sel');
-    if (state.lastMove && (state.lastMove.from === name || state.lastMove.to === name)) el.classList.add('last');
+    if (name === selected || (state.lastMove && (state.lastMove.from === name || state.lastMove.to === name))) el.classList.add('hl');
     if (name === kingSq) el.classList.add('chk');
-    const t = legalFrom.find((m) => m.to === name);
-    if (t) el.classList.add(piece ? 'cap' : 'target');
-    if (showAssist && assist && assist.best && (name === assist.best.slice(0,2))) el.classList.add('a-from');
-    if (showAssist && assist && assist.best && (name === assist.best.slice(2,4))) el.classList.add('a-to');
-    if (piece) {
-      const w = piece === piece.toUpperCase();
-      const s = document.createElement('span'); s.className = w ? 'p-w' : 'p-b'; s.textContent = GLYPH[piece.toLowerCase()];
-      el.appendChild(s);
+    if (legalFrom.some((m) => m.to === name)) el.classList.add(piece ? 'cap' : 'target');
+    if (showAssist && assist && assist.best) {
+      if (name === assist.best.slice(0, 2)) el.classList.add('a-from');
+      if (name === assist.best.slice(2, 4)) el.classList.add('a-to');
     }
-    if ((i % 8 === 0) ) { const co = document.createElement('span'); co.className='coord'; co.textContent = flipped ? (r+1) : (8-r); el.appendChild(co); }
+    let inner = '';
+    if (i % 8 === 0) inner += `<span class="co r">${name[1]}</span>`;
+    if (i >= 56) inner += `<span class="co f">${name[0]}</span>`;
+    if (piece) inner += pieceEl(piece);
+    el.innerHTML = inner;
     el.onclick = () => clickSquare(name, piece);
     board.appendChild(el);
   }
@@ -180,30 +322,57 @@ function clickSquare(name, piece) {
   if (selected) {
     const cands = state.legal.filter((m) => m.from === selected && m.to === name);
     if (cands.length) {
-      if (cands[0].promotion) return askPromotion((p) => send({ type:'move', from:selected, to:name, promotion:p }));
-      return send({ type:'move', from:selected, to:name });
+      const from = selected;
+      if (cands[0].promotion) return askPromotion((p) => send({ type: 'move', from, to: name, promotion: p }));
+      return send({ type: 'move', from, to: name });
     }
   }
   const mine = piece && ((me === 'w') === (piece === piece.toUpperCase()));
   selected = mine && state.legal.some((m) => m.from === name) ? name : null;
   renderBoard();
 }
-function askPromotion(cb) {
-  const d = $('promo'), box = $('promoBtns'); box.innerHTML = '';
-  for (const p of ['q','r','b','n']) { const b = document.createElement('button'); b.textContent = GLYPH[p]; b.onclick = () => { d.close(); cb(p); }; box.appendChild(b); }
-  d.showModal();
-}
-function send(o) { ws.send(JSON.stringify(o)); }
-$('resign').onclick = () => { if (confirm('Resign?')) send({ type:'resign' }); };
-$('draw').onclick = () => send({ type: state.drawOffer && state.drawOffer !== me ? 'acceptDraw' : 'offerDraw' });
-$('rematch').onclick = () => send({ type:'rematch' });
-$('share').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(location.href); $('share').textContent = 'copied!'; };
-function escapeHtml(s) { return s.replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-document.addEventListener('visibilitychange', () => { if (!document.hidden && joinedCode && (!ws || ws.readyState > 1)) connect(joinedCode); });
-// ---- secret assistant UI ----
-// The server only ever sends 'assist' to a player named Amit. Even then the overlay stays hidden
-// until toggled: press H, or tap the title 3 times (phones).
+function askPromotion(cb) {
+  const box = $('promoBtns'); box.innerHTML = '';
+  for (const p of ['q', 'r', 'b', 'n']) {
+    const b = document.createElement('button'); b.className = 'pbtn';
+    b.innerHTML = pieceEl(me === 'w' ? p.toUpperCase() : p);
+    b.onclick = () => { $('promo').style.display = 'none'; cb(p); };
+    box.appendChild(b);
+  }
+  $('promo').style.display = 'flex';
+}
+
+function send(o) { ws.send(JSON.stringify(o)); }
+function act(a) {
+  if (a === 'resign') { if (confirm('Resign this game?')) send({ type: 'resign' }); }
+  else if (a === 'draw') send({ type: state.drawOffer && state.drawOffer !== me ? 'acceptDraw' : 'offerDraw' });
+  else if (a === 'rematch') { send({ type: 'rematch' }); }
+  else if (a === 'share') { navigator.clipboard && navigator.clipboard.writeText(location.href); document.querySelectorAll('[data-act=share]').forEach((b) => b.textContent = 'Copied!'); }
+}
+
+// game over popup
+function renderOverlay() {
+  const over = state.status.over, key = state.status.text + '|' + state.history.length;
+  if (!over || dismissed === key) { $('overlay').style.display = 'none'; return; }
+  const t = state.status.text, isPlayer = me === 'w' || me === 'b';
+  let title = t, sub = '';
+  const whiteWon = /White wins/.test(t) || /Black resigned/.test(t), blackWon = /Black wins/.test(t) || /White resigned/.test(t);
+  if (whiteWon || blackWon) {
+    const winner = whiteWon ? 'w' : 'b';
+    title = isPlayer ? (winner === me ? 'You won!' : 'You lost') : (whiteWon ? 'White won' : 'Black won');
+    sub = t;
+  } else { title = 'Draw'; sub = t; }
+  $('otitle').textContent = title; $('osub').textContent = sub;
+  $('orematch').style.display = isPlayer ? '' : 'none';
+  $('overlay').style.display = 'flex';
+}
+$('orematch').onclick = () => { send({ type: 'rematch' }); };
+$('oclose').onclick = () => { dismissed = state.status.text + '|' + state.history.length; $('overlay').style.display = 'none'; };
+
+// ---------- secret assistant UI ----------
+// The server only ever sends 'assist' to a player named Amit, and only on that player's turn.
+// Even then it stays hidden until toggled: press H, or tap the header 3 times (phones).
 function renderAssist() {
   const el = $('assist');
   if (!showAssist) { el.style.display = 'none'; return; }
@@ -211,23 +380,20 @@ function renderAssist() {
   if (!assist) { el.textContent = 'assistant on - waiting for your turn'; return; }
   if (assist.thinking) { el.textContent = 'thinking...'; return; }
   if (assist.error) { el.textContent = 'engine error: ' + assist.error; return; }
-  let ev = assist.mate != null ? `#${assist.mate}` : (assist.cp != null ? (assist.cp/100).toFixed(2) : '?');
-  el.style.display = 'block';
-  const NAMES = { k:'KING', q:'QUEEN', r:'ROOK', b:'BISHOP', n:'KNIGHT', p:'PAWN' };
-  const from = assist.best.slice(0,2), to = assist.best.slice(2,4), promo = assist.best[4];
-  let what = 'Move';
+  const ev = assist.mate != null ? `#${assist.mate}` : (assist.cp != null ? (assist.cp / 100).toFixed(2) : '?');
+  const from = assist.best.slice(0, 2), to = assist.best.slice(2, 4), promo = assist.best[4];
+  let what;
   try {
     const g = parseFen(state.fen);
     const at = (sq) => g[8 - +sq[1]][files.indexOf(sq[0])];
-    const pc = at(from), tgt = at(to);
-    const name = NAMES[pc.toLowerCase()];
-    if (/^O-O/.test(assist.san || '')) what = (assist.san === 'O-O-O' ? 'CASTLE queenside: ' : 'CASTLE kingside: ') + 'move the KING ' + from + ' to ' + to;
+    const pc = at(from), tgt = at(to), name = NAMES[pc.toLowerCase()];
+    if (/^O-O/.test(assist.san || '')) what = (assist.san === 'O-O-O' ? 'CASTLE queenside: ' : 'CASTLE kingside: ') + `move the KING ${from} to ${to}`;
     else what = `Move the ${name} on ${from} to ${to}` + (tgt ? ` (captures ${NAMES[tgt.toLowerCase()]})` : '') + (promo ? ` and promote to ${NAMES[promo]}` : '');
   } catch (e) { what = `Move ${from} to ${to}`; }
-  el.innerHTML = `<div style="font-size:15px;opacity:1;font-weight:600">${what}</div><div>${assist.san || ''}  eval ${ev}  depth ${assist.depth}</div>`;
+  el.innerHTML = `<div style="font-size:15px;font-weight:700">${what}</div><div style="opacity:.7">${esc(assist.san || '')}  eval ${ev}  depth ${assist.depth}</div>`;
 }
 function toggleAssist() { showAssist = !showAssist; renderAssist(); renderBoard(); }
-document.addEventListener('keydown', (e) => { if ((e.key === 'h' || e.key === 'H') && document.activeElement.tagName !== 'INPUT') toggleAssist(); });
+document.addEventListener('keydown', (e) => { if ((e.key === 'h' || e.key === 'H') && !/INPUT/.test(document.activeElement.tagName)) toggleAssist(); });
 let taps = 0, tapTimer;
 $('title').addEventListener('click', () => { taps++; clearTimeout(tapTimer); tapTimer = setTimeout(() => taps = 0, 700); if (taps >= 3) { taps = 0; toggleAssist(); } });
 </script>
